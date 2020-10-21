@@ -1,0 +1,26 @@
+name: Run tests
+
+on:
+  push:
+
+jobs:
+  run-tests-ce:
+    strategy:
+      matrix:
+        tarantool-version: ["1.10", "2.5"]
+      fail-fast: false
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install requirements for community
+        run: |
+          curl -L https://tarantool.io/installer.sh | sudo VER=${{ matrix.tarantool-version }} bash
+          sudo apt install -y tarantool-dev
+          ./deps.sh
+
+      - name: Run linter
+        run: .rocks/bin/luacheck .
+
+      - name: Run tests
+        run: .rocks/bin/luatest -v
