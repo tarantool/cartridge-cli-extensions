@@ -1,0 +1,4 @@
+build.luarocks/
+.rocks/
+**.snap
+**.xlog
