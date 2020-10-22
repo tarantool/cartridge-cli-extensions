@@ -30,8 +30,6 @@ jobs:
 
       - name: Push release rockspec
         run: |
-          curl --fail -X PUT -F rockspec=@$ROCK_NAME-scm-1.rockspec \
-            https://${{ secrets.ROCKS_USERNAME }}:${{ secrets.ROCKS_PASSWORD }}@${{ secrets.ROCKS_SERVER }} \
           cat $ROCK_NAME-scm-1.rockspec |
               sed -E \
                 -e "s/branch = '.+'/tag = '${GIT_TAG}'/g" \
