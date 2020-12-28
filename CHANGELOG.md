@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Performing `box.session.push` on `print` when admin function is called
+
 ## [1.0.0] - 2020-10-23
 
 ### Added

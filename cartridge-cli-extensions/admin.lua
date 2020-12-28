@@ -44,6 +44,20 @@ local function check_func_args(func_args)
     return true
 end
 
+-- prints values and performs box.session push
+local function print_and_push(...)
+    print(...)
+
+    local args = {...}
+    local args_strings = {}
+
+    for i=1,select('#', ...) do
+        table.insert(args_strings, tostring(args[i]))
+    end
+
+    box.session.push(table.concat(args_strings, '\t'))
+end
+
 function admin.register(func_name, func_usage, func_args, func_call)
     if type(func_name) ~= 'string' then
         return nil, string.format("func_name should be string")
@@ -134,6 +148,11 @@ local function admin_call(func_name, opts)
     end
 
     assert(registry[func_name].call ~= nil)
+
+    -- set print function
+    local env = table.copy(_G)
+    env.print = print_and_push
+    setfenv(registry[func_name].call, env)
 
     local res, err = registry[func_name].call(opts)
     return res, err

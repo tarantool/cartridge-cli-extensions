@@ -94,12 +94,12 @@ g.test_register_bad_params = function()
     t.assert_str_contains(err, "Argument type should be one of string, number, boolean, got table")
 end
 
-local func1 = {
+local func_no_args = {
     usage = 'Call some function w/o args',
     call = function() return 123 end
 }
 
-local func2 = {
+local func_with_args = {
     usage = 'Call some function w/ args',
     args = {
         arg1 = {usage = 'usage-1', type = 'string'},
@@ -109,20 +109,34 @@ local func2 = {
     call = function(opts) return opts end,
 }
 
+local func_with_print = {
+    usage = 'Function that prints opts',
+    args = {
+        arg1 = {usage = 'usage-1', type = 'string'},
+        arg2 = {usage = 'usage-2', type = 'number'},
+        arg3 = {usage = 'usage-3', type = 'boolean'},
+    },
+    call = function(opts)
+        print(opts.arg1, nil, opts.arg2, nil, opts.arg3)
+    end,
+}
+
 local function register_test_funcs()
-    local ok, err = admin.register('func1', func1.usage, func1.args, func1.call)
+    local ok, err = admin.register('func_no_args', func_no_args.usage, func_no_args.args, func_no_args.call)
     t.assert(ok, err)
-    local ok, err = admin.register('func2', func2.usage, func2.args, func2.call)
+    local ok, err = admin.register('func_with_args', func_with_args.usage, func_with_args.args, func_with_args.call)
+    t.assert(ok, err)
+    local ok, err = admin.register('func_with_print', func_with_print.usage, func_with_print.args, func_with_print.call)
     t.assert(ok, err)
 end
 
 g.test_register = function()
     register_test_funcs()
 
-    -- try to register func1 again
-    local ok, err = admin.register('func1', func1.usage, func1.args, func1.call)
+    -- try to register func_no_args again
+    local ok, err = admin.register('func_no_args', func_no_args.usage, func_no_args.args, func_no_args.call)
     t.assert_not(ok)
-    t.assert_str_contains(err, 'Function "func1" is already registered')
+    t.assert_str_contains(err, 'Function "func_no_args" is already registered')
 end
 
 g.test_list = function()
@@ -132,8 +146,9 @@ g.test_list = function()
 
     -- get functions list
     t.assert_equals(admin_list(), {
-        func1 = {usage = 'Call some function w/o args'},
-        func2 = {usage = 'Call some function w/ args'},
+        func_no_args = {usage = 'Call some function w/o args'},
+        func_with_args = {usage = 'Call some function w/ args'},
+        func_with_print = {usage = "Function that prints opts"},
     })
 end
 
@@ -157,19 +172,19 @@ g.test_help = function()
     t.assert_str_contains(err, 'Function "non-existent-func" isn\'t found')
 
     -- func w/o args
-    local help, err = admin_help('func1')
+    local help, err = admin_help('func_no_args')
     t.assert_equals(err, nil)
     t.assert_equals(help, {
-        usage = func1.usage,
+        usage = func_no_args.usage,
         args = nil,
     })
 
     -- func w/ args
-    local help, err = admin_help('func2')
+    local help, err = admin_help('func_with_args')
     t.assert_equals(err, nil)
     t.assert_equals(help, {
-        usage = func2.usage,
-        args = func2.args,
+        usage = func_with_args.usage,
+        args = func_with_args.args,
     })
 end
 
@@ -188,7 +203,7 @@ g.test_call = function()
     t.assert_str_contains(err, 'func_name should be string')
 
     -- bad opts
-    local res, err = admin_call('func1', 123)
+    local res, err = admin_call('func_no_args', 123)
     t.assert_equals(res, nil)
     t.assert_str_contains(err, 'opts should be table or nil')
 
@@ -198,7 +213,7 @@ g.test_call = function()
     t.assert_str_contains(err, 'Function "non-existent-func" isn\'t found')
 
     -- call function w/o args
-    local res, err = admin_call('func1')
+    local res, err = admin_call('func_no_args')
     t.assert_equals(err, nil)
     t.assert_equals(res, 123)
 
@@ -208,7 +223,22 @@ g.test_call = function()
         arg2 = 123,
         arg3 = true,
     }
-    local res, err = admin_call('func2', opts)
+    local res, err = admin_call('func_with_args', opts)
     t.assert_equals(err, nil)
     t.assert_equals(res, opts)
+
+    -- call function with print
+    local pushed_value
+    box.session.push = function (value)
+        pushed_value = value
+    end
+
+    local opts = {
+        arg1 = 'some-string',
+        arg2 = 123,
+        arg3 = true,
+    }
+    local _, err = admin_call('func_with_print', opts)
+    t.assert_equals(err, nil)
+    t.assert_equals(pushed_value, 'some-string\tnil\t123\tnil\ttrue')
 end

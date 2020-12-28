@@ -13,6 +13,9 @@ via `cartridge admin` command.
 
 `admin.register(func_name, func_usage, func_args, func_call)`
 
+**Note**: if your function calls `print` function (or `box.session.push`),
+message is displayed on `cartridge admin` call.
+
 Arguments:
 
   * `func_name` (`string`, required) - name of function;
@@ -75,6 +78,9 @@ local probe = {
         end
 
         local cartridge_admin = require('cartridge.admin')
+
+        print(string.format('Probing %q...', opts.uri))
+
         local ok, err = cartridge_admin.probe_server(opts.uri)
 
         if not ok then
@@ -110,5 +116,6 @@ Call function via `cartridge admin`:
 ```bash
 cartridge admin --name APPNAME probe --uri localhost:3301
 
+   • Probing "localhost:3301"...
    • Probe "localhost:3301": OK
 ```
