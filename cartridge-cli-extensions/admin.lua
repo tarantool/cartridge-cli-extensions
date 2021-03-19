@@ -80,6 +80,8 @@ function admin.register(func_name, func_usage, func_args, func_call)
         if not ok then
             return nil, string.format("func_args passed in bad format: %s", err)
         end
+    else
+        func_args = nil  -- box.NULL
     end
 
     if type(func_call) ~= 'function' then
@@ -108,7 +110,7 @@ end
 -- functions that are exposed for `cartridge admin`
 
 local function admin_list()
-    local list = {}
+    local list = setmetatable({}, {__serialize = 'map'})
 
     for func_name, func_spec in pairs(registry) do
         list[func_name] = {
@@ -130,7 +132,7 @@ local function admin_help(func_name)
 
     return {
         usage = registry[func_name].usage,
-        args = registry[func_name].args,
+        args = setmetatable(registry[func_name].args or {}, {__serialize = 'map'}),
     }
 end
 

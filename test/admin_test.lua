@@ -100,6 +100,11 @@ local test_funcs = {
         call = function() return 123 end
     },
 
+    func_empty_args = {
+        usage = 'Call some function w/ empty args',
+        call = function() end
+    },
+
     func_with_args = {
         usage = 'Call some function w/ args',
         args = {
@@ -151,14 +156,16 @@ g.test_list = function()
     local admin_list = rawget(_G, '__cartridge_admin_list')
 
     -- get functions list
-    t.assert_equals(admin_list(), {
+    local list_funcs = admin_list()
+    t.assert_equals(list_funcs, {
         func_no_args = {usage = test_funcs.func_no_args.usage},
         func_with_args = {usage = test_funcs.func_with_args.usage},
     })
+    t.assert_equals(getmetatable(list_funcs).__serialize, 'map')
 end
 
 g.test_help = function()
-    for _, name in ipairs({'func_no_args', 'func_with_args'}) do
+    for _, name in ipairs({'func_no_args', 'func_empty_args', 'func_with_args'}) do
         register_test_func(name)
     end
 
@@ -183,8 +190,18 @@ g.test_help = function()
     t.assert_equals(err, nil)
     t.assert_equals(help, {
         usage = test_funcs.func_no_args.usage,
-        args = nil,
+        args = {},
     })
+    t.assert_equals(getmetatable(help.args).__serialize, 'map')
+
+    -- func w/ empty args
+    local help, err = admin_help('func_empty_args')
+    t.assert_equals(err, nil)
+    t.assert_equals(help, {
+        usage = test_funcs.func_empty_args.usage,
+        args = {},
+    })
+    t.assert_equals(getmetatable(help.args).__serialize, 'map')
 
     -- func w/ args
     local help, err = admin_help('func_with_args')
