@@ -94,66 +94,73 @@ g.test_register_bad_params = function()
     t.assert_str_contains(err, "Argument type should be one of string, number, boolean, got table")
 end
 
-local func_no_args = {
-    usage = 'Call some function w/o args',
-    call = function() return 123 end
-}
-
-local func_with_args = {
-    usage = 'Call some function w/ args',
-    args = {
-        arg1 = {usage = 'usage-1', type = 'string'},
-        arg2 = {usage = 'usage-2', type = 'number'},
-        arg3 = {usage = 'usage-3', type = 'boolean'},
+local test_funcs = {
+    func_no_args = {
+        usage = 'Call some function w/o args',
+        call = function() return 123 end
     },
-    call = function(opts) return opts end,
-}
 
-local func_with_print = {
-    usage = 'Function that prints opts',
-    args = {
-        arg1 = {usage = 'usage-1', type = 'string'},
-        arg2 = {usage = 'usage-2', type = 'number'},
-        arg3 = {usage = 'usage-3', type = 'boolean'},
+    func_with_args = {
+        usage = 'Call some function w/ args',
+        args = {
+            arg1 = {usage = 'usage-1', type = 'string'},
+            arg2 = {usage = 'usage-2', type = 'number'},
+            arg3 = {usage = 'usage-3', type = 'boolean'},
+        },
+        call = function(opts) return opts end,
     },
-    call = function(opts)
-        print(opts.arg1, nil, opts.arg2, nil, opts.arg3)
-    end,
+
+    func_with_print = {
+        usage = 'Function that prints opts',
+        args = {
+            arg1 = {usage = 'usage-1', type = 'string'},
+            arg2 = {usage = 'usage-2', type = 'number'},
+            arg3 = {usage = 'usage-3', type = 'boolean'},
+        },
+        call = function(opts)
+            print(opts.arg1, nil, opts.arg2, nil, opts.arg3)
+        end,
+    },
 }
 
-local function register_test_funcs()
-    local ok, err = admin.register('func_no_args', func_no_args.usage, func_no_args.args, func_no_args.call)
-    t.assert(ok, err)
-    local ok, err = admin.register('func_with_args', func_with_args.usage, func_with_args.args, func_with_args.call)
-    t.assert(ok, err)
-    local ok, err = admin.register('func_with_print', func_with_print.usage, func_with_print.args, func_with_print.call)
+local function register_test_func(name)
+    t.assert(test_funcs[name] ~= nil, name)
+
+    local test_func = test_funcs[name]
+    local ok, err = admin.register(name, test_func.usage, test_func.args, test_func.call)
     t.assert(ok, err)
 end
 
 g.test_register = function()
-    register_test_funcs()
+    for _, name in ipairs({'func_no_args', 'func_with_args'}) do
+        register_test_func(name)
+    end
 
     -- try to register func_no_args again
+    local func_no_args = test_funcs.func_no_args
     local ok, err = admin.register('func_no_args', func_no_args.usage, func_no_args.args, func_no_args.call)
     t.assert_not(ok)
     t.assert_str_contains(err, 'Function "func_no_args" is already registered')
 end
 
 g.test_list = function()
-    register_test_funcs()
+    for _, name in ipairs({'func_no_args', 'func_with_args'}) do
+        register_test_func(name)
+    end
 
     local admin_list = rawget(_G, '__cartridge_admin_list')
 
     -- get functions list
     t.assert_equals(admin_list(), {
-        func_no_args = {usage = 'Call some function w/o args'},
-        func_with_args = {usage = 'Call some function w/ args'},
-        func_with_print = {usage = "Function that prints opts"},
+        func_no_args = {usage = test_funcs.func_no_args.usage},
+        func_with_args = {usage = test_funcs.func_with_args.usage},
     })
 end
 
 g.test_help = function()
-    register_test_funcs()
+    for _, name in ipairs({'func_no_args', 'func_with_args'}) do
+        register_test_func(name)
+    end
 
     local admin_help = rawget(_G, '__cartridge_admin_help')
 
@@ -175,7 +182,7 @@ g.test_help = function()
     local help, err = admin_help('func_no_args')
     t.assert_equals(err, nil)
     t.assert_equals(help, {
-        usage = func_no_args.usage,
+        usage = test_funcs.func_no_args.usage,
         args = nil,
     })
 
@@ -183,13 +190,15 @@ g.test_help = function()
     local help, err = admin_help('func_with_args')
     t.assert_equals(err, nil)
     t.assert_equals(help, {
-        usage = func_with_args.usage,
-        args = func_with_args.args,
+        usage = test_funcs.func_with_args.usage,
+        args = test_funcs.func_with_args.args,
     })
 end
 
 g.test_call = function()
-    register_test_funcs()
+    for _, name in ipairs({'func_no_args', 'func_with_args', 'func_with_print'}) do
+        register_test_func(name)
+    end
 
     local admin_call = rawget(_G, '__cartridge_admin_call')
 
