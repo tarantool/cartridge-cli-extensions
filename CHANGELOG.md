@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- All returned maps have `{__serialize = 'map'}` set.
+  Cartridge CLI calls ExecTyped using connectors. Such calls expects map values,
+  but Lua empty tables are serialized as arrays by default.
+
 ## [1.1.0] - 2020-12-28
 
 ### Added
