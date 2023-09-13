@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Add global variables to Cartridge Hot Reload whitelist (#14).
+
 ## [1.1.1] - 2020-03-24
 
 ### Fixed

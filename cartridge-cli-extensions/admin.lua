@@ -164,6 +164,15 @@ function admin.init()
     rawset(_G, '__cartridge_admin_list', admin_list)
     rawset(_G, '__cartridge_admin_help', admin_help)
     rawset(_G, '__cartridge_admin_call', admin_call)
+
+    local ok, hotreload = pcall(require, 'cartridge.hotreload')
+    if ok then
+        hotreload.whitelist_globals({
+            '__cartridge_admin_list',
+            '__cartridge_admin_help',
+            '__cartridge_admin_call',
+        })
+    end
 end
 
 return admin
