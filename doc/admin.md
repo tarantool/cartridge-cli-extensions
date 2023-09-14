@@ -51,6 +51,10 @@ Removes `func_name` function if it is registered.
 
 Always returns `true`.
 
+### Hot reload
+
+Cartridge Admin functions don't support Cartridge Hot Reload.
+Restart instances manually to add new admin functions.
 ## Example
 
 Describe admin function in application:
